@@ -5,7 +5,6 @@ from ortools.sat.python import cp_model
 from book import *
 
 MINIMUM_PRICE = 20000
-DEFAULT_MIN_QUALITY = "상"
 
 def flatten(list_of_list):
     return list(chain.from_iterable(list_of_list))
@@ -43,17 +42,17 @@ class SaveOptimalSolution(cp_model.CpSolverSolutionCallback):
     def SolutionCount(self):
         return self.__solution_count
 
-def solve(book_urls):
+def solve(book_urls, min_quality):
     store_list = get_store_list()
     store_name_to_idx = {store_name:idx for idx, store_name in enumerate(store_list)}
 
-    print("Start craling...")
+    print(f"Start crawling with minimum quality '{min_quality}'...")
     book_list = []
     for book_url in book_urls:
-        book = search_book(book_url, DEFAULT_MIN_QUALITY, store_list)
+        book = search_book(book_url, min_quality, store_list)
         print(f"Found {len(book.item_list)} items of '{book.title}'...")
         book_list.append(book)
-    print("End craling...")
+    print("End crawling...")
 
     model = cp_model.CpModel()
 
