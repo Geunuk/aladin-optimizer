@@ -15,7 +15,7 @@ class Item():
         self.price = price
         self.store_name = store_name
     
-    def __repr__(self):
+    def __str__(self):
         return f"{self.store_name} {self.title} {self.quality} {self.price} {self.link}"
 
 class Book():
@@ -23,8 +23,8 @@ class Book():
         self.title = title
         self.item_list = item_list
 
-    def __repr__(self):
-        return '\n'.join(map(repr, self.item_list))
+    def __str__(self):
+        return '\n'.join(map(str, self.item_list))
 
     def find_item(self, store_name):
         for item in self.item_list:
