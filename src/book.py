@@ -31,6 +31,12 @@ class Book():
             if item.store_name == store_name:
                 return item
         return None
+        
+    def to_dict(self):
+        return {
+            "title": self.title,
+            "count": len(self.item_list)
+        }
 
 def get_store_list():
     html = requests.get(used_book_main_url).text
@@ -97,3 +103,19 @@ def search_book(book_url, min_quality, store_list):
             item_list.append(Item(book_title, link, quality, price, store_name))
     
     return Book(book_title, item_list)
+
+def get_book_list(book_urls, store_list, min_quality):
+    print(f"Start crawling with minimum quality '{min_quality}'...")
+    book_list = []
+    for book_url in book_urls:
+        try:
+            book = search_book(book_url, min_quality, store_list)
+        except:
+            print(f"Cannot access '{book_url}'...")
+            book_list.append(None)
+        else:
+            print(f"Found {len(book.item_list)} items of '{book.title}'...")
+            book_list.append(book)
+    print("End crawling...")
+
+    return book_list

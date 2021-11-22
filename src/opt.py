@@ -2,8 +2,6 @@ from itertools import chain
 
 from ortools.sat.python import cp_model
 
-from book import *
-
 MINIMUM_PRICE = 20000
 
 def flatten(list_of_list):
@@ -42,20 +40,9 @@ class SaveOptimalSolution(cp_model.CpSolverSolutionCallback):
     def SolutionCount(self):
         return self.__solution_count
 
-def solve(book_urls, min_quality):
-    store_list = get_store_list()
-    store_name_to_idx = {store_name:idx for idx, store_name in enumerate(store_list)}
-
-    print(f"Start crawling with minimum quality '{min_quality}'...")
-    book_list = []
-    for book_url in book_urls:
-        book = search_book(book_url, min_quality, store_list)
-        print(f"Found {len(book.item_list)} items of '{book.title}'...")
-        book_list.append(book)
-    print("End crawling...")
-
+def solve(book_list, store_list):
     model = cp_model.CpModel()
-
+    
     # Variables
     num_rows = len(book_list)
     num_cols = len(store_list)
@@ -70,10 +57,13 @@ def solve(book_urls, min_quality):
     # 1. Max one store for each book.
     for row_vars in var_matrix:
         model.Add(cp_model.LinearExpr.Sum(row_vars) <= 1)
-
+    
     # 2. Set zero to the stores that don't have books.
+    store_name_to_idx = {store_name:idx for idx, store_name in enumerate(store_list)}
     for r in range(num_rows):
         not_selling_stores = set(range(num_cols))
+        if book_list[r] is None:
+            continue
         for item in book_list[r].item_list:
             store_idx = store_name_to_idx[item.store_name]
             if store_idx in not_selling_stores:
@@ -90,17 +80,25 @@ def solve(book_urls, min_quality):
     for c, var in enumerate(item_exist_list):
         model.Add(sum([var_matrix[r][c] for r in range(num_rows)]) >= 1).OnlyEnforceIf(var)
         model.Add(sum([var_matrix[r][c] for r in range(num_rows)]) < 1).OnlyEnforceIf(var.Not())
-
+    
     for c in range(num_cols):
         col_vars = [var_matrix[r][c] for r in range(num_rows)]
         col_prices = []
         for r in range(num_rows):
+            if book_list[r] is None:
+                col_prices.append(0)
+                continue
             store_name = store_list[c]
             item = book_list[r].find_item(store_name)
             price = item.price if item is not None else 0
             col_prices.append(price)
         model.Add(cp_model.LinearExpr.ScalProd(col_vars, col_prices) >= MINIMUM_PRICE*item_exist_list[c])
 
+    for r in range(num_rows):
+        if book_list[r] is None:
+            for c in range(num_cols):
+                model.Add(var_matrix[r][c] == 0)
+    
     solver = cp_model.CpSolver()
     callback = SaveOptimalSolution(flatten(var_matrix))
     status = solver.SearchForAllSolutions(model, callback)
@@ -113,6 +111,9 @@ def solve(book_urls, min_quality):
         unflattened = unflatten(solution, num_rows, num_cols)
         is_zero_solution = True
         for r in range(num_rows):
+            if book_list[r] is None:
+                tmp.append(None)
+                continue
             for c in range(num_cols):
                 if unflattened[r][c] == 1:
                     is_zero_solution = False
@@ -121,19 +122,3 @@ def solve(book_urls, min_quality):
         if not is_zero_solution:
             result.append(tmp)
     return result
-
-if __name__ == "__main__":
-    from main import print_result
-    
-    book_urls = [
-        "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=16294019", #굴소년
-        "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=86321510", #1만시간의 재발견
-        "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=61762093", #정리하는 뇌
-        "https://www.aladin.co.kr/shop/UsedShop/wuseditemall.aspx?ItemId=14163562", #여행의 기술
-        "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=188276096", # 여행의 이유
-        "https://www.aladin.co.kr/shop/UsedShop/wuseditemall.aspx?ItemId=1000152", #채식주의자
-        ]
-    
-    result = solve(book_urls)
-    
-    print_result(result)
