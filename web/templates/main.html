@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Aladain Optimizer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" type="text/css">
+</head>
+<body>  
+<h1>Aladin Optimizer</h1>
+<div id="introduction">
+  <h2>설명</h2>
+  <p>이것은 최적화 하는 프로그램 입니다. 사용하기 위해서는 이렇게 해야 합니다. 왜 만들었을까요</p>
+</div>
+<div id='input-container'></div>
+<div id="solution-container"></div>
+<script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+<script src="{{ url_for('static', filename='input.js') }}" type="module"></script>
+</body>
+</html>

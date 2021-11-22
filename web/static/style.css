@@ -1,0 +1,41 @@
+* {
+    font-family: Arial, Helvetica, sans-serif
+}
+
+label[for=opt] {
+    display: hidden;
+}
+
+#solution-container, #input-container, #introduction {
+    background-color: white;
+    border-radius: 10px;
+}
+td.link, td.status {
+    text-align: left;
+}
+.solution, #input_table {
+    background-color: white;
+    margin: 1em 0em;
+    border-style: solid;
+    border-width: medium;
+    text-align: center;
+}
+
+#inputs #results {
+    margin: 10em 0em;
+}
+
+#adjust_number {
+    margin: 2em 1em;
+}
+
+h1 {
+    height : 100px;
+    color:black;
+    color: white;
+    text-align: center;
+    line-height : 100px;
+}
+html {
+    background-image: url("./library.jpg");
+}
