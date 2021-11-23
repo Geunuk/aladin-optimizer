@@ -2,7 +2,7 @@ import sys
 
 from flask import Flask, render_template, request, jsonify
 
-from src.web import processing
+from src.pipeline import processing
 
 app = Flask(__name__, template_folder="./web/templates", static_folder="./web/static")
 
@@ -14,7 +14,7 @@ def index():
 def handle_input():
     data = request.get_json()
     result = processing(data["urls"], data["min_quality"])
-    return result
+    return result, 200
     
 if __name__ == '__main__':
     app.run()
