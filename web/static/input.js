@@ -7,7 +7,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 import { SolutionContainer } from "./solution.js";
-//require('./solution.js')
 
 var InputContainer = function (_React$Component) {
     _inherits(InputContainer, _React$Component);
@@ -47,18 +46,16 @@ var InputContainer = function (_React$Component) {
                 return response.json();
             }).then(function (response) {
                 console.log(JSON.stringify(response, null, 2));
-                //console.log(response.search_result.map(({title})=>title))
                 _this2.setState({
                     titles: response.search_result.map(function (data) {
                         if (data !== null) return data.title;
                     }),
                     statuses: response.search_result.map(function (data) {
-                        if (data !== null) return "\u2714\uFE0F " + data.count;else return "\u274C";
+                        if (data !== null) return "\u2714\uFE0F " + data.store_list.length;else return "\u274C";
                     })
                 });
                 ReactDOM.render(React.createElement(SolutionContainer, { solutions: response.opt_result }), document.getElementById("solution-container"));
             });
-            //.then(data => this.setState({ postId: data.id }));
         }
     }, {
         key: "handleIncreaseRow",

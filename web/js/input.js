@@ -42,7 +42,7 @@ handleClick(e) {
             this.setState({
                 titles: response.search_result.map(data =>{if (data !== null) return data.title}),
                 statuses: response.search_result.map(data =>{
-                    if (data !== null) return `✔️ ${data.count}`
+                    if (data !== null) return `✔️ ${data.store_list.length}`
                     else return `❌`})
             }
             )

@@ -35,7 +35,7 @@ class Book():
     def to_dict(self):
         return {
             "title": self.title,
-            "count": len(self.item_list)
+            "store_list": [item.store_name for item in self.item_list]
         }
 
 def get_store_list():
