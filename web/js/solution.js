@@ -1,7 +1,7 @@
-export function SolutionContainer({solutions}) {
+export function SolutionContainer({heading, solutions}) {
     return (
         <React.Fragment>
-            <h2>결과</h2>
+            <h2>{heading}</h2>
             {solutions.map((sol, idx) => {
                 return <SolutionTable key={`Solution ${idx+1}`} name={`Solution ${idx+1}`} solution={sol} />
             })}

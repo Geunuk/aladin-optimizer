@@ -1,5 +1,6 @@
 export function SolutionContainer(_ref) {
-    var solutions = _ref.solutions;
+    var heading = _ref.heading,
+        solutions = _ref.solutions;
 
     return React.createElement(
         React.Fragment,
@@ -7,7 +8,7 @@ export function SolutionContainer(_ref) {
         React.createElement(
             "h2",
             null,
-            "\uACB0\uACFC"
+            heading
         ),
         solutions.map(function (sol, idx) {
             return React.createElement(SolutionTable, { key: "Solution " + (idx + 1), name: "Solution " + (idx + 1), solution: sol });

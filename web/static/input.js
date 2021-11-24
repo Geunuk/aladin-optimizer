@@ -54,7 +54,13 @@ var InputContainer = function (_React$Component) {
                         if (data !== null) return "\u2714\uFE0F " + data.store_list.length;else return "\u274C";
                     })
                 });
-                ReactDOM.render(React.createElement(SolutionContainer, { solutions: response.opt_result }), document.getElementById("solution-container"));
+                var solutions = React.createElement(
+                    React.Fragment,
+                    null,
+                    React.createElement(SolutionContainer, { heading: "결과", solutions: response.solutions }),
+                    React.createElement(SolutionContainer, { heading: "결과(무료배송)", solutions: response.solutions_free_shipping })
+                );
+                ReactDOM.render(solutions, document.getElementById("solution-container"));
             });
         }
     }, {
@@ -108,7 +114,7 @@ var InputContainer = function (_React$Component) {
                     "\uCD5C\uC800 \uD488\uC9C8",
                     React.createElement(
                         "select",
-                        { id: "min_quality", value: this.state.minQualtiy, onChange: this.handleMinQualityChange },
+                        { id: "min_quality", defaultValue: "상", value: this.state.minQualtiy, onChange: this.handleMinQualityChange },
                         React.createElement(
                             "option",
                             { value: "\uCD5C\uC0C1" },
@@ -116,7 +122,7 @@ var InputContainer = function (_React$Component) {
                         ),
                         React.createElement(
                             "option",
-                            { value: "\uC0C1", defaultValue: true },
+                            { value: "\uC0C1" },
                             "\uC0C1"
                         ),
                         React.createElement(

@@ -3,7 +3,7 @@ from itertools import chain
 from ortools.sat.python import cp_model
 
 MINIMUM_PRICE = 20000
-DELIVERY_FEE = 2000
+SHIPPING_FEE = 2000
 
 def flatten(list_of_list):
     return list(chain.from_iterable(list_of_list))
@@ -98,7 +98,7 @@ def add_variables(model, num_rows, num_cols, price_matrix):
     
     return item_vars, store_vars, below_min_price_vars    
     
-def add_base_constraints(model, item_vars, store_vars, below_min_price_vars, item_exist_matrix, price_matrix, only_no_delivery_fee=False):
+def add_base_constraints(model, item_vars, store_vars, below_min_price_vars, item_exist_matrix, price_matrix, only_free_shipping=False):
     num_rows = len(item_vars)
     num_cols = len(item_vars[0])
     
@@ -113,7 +113,7 @@ def add_base_constraints(model, item_vars, store_vars, below_min_price_vars, ite
             if not item_exist_matrix[r][c]:
                 model.Add(item_vars[r][c] == 0)
 
-    if only_no_delivery_fee:
+    if only_free_shipping:
         # 3. If you have books to buy at each store,
         # you have to exceed the minimum price.
         # Variables for each column.
@@ -129,7 +129,7 @@ def add_base_constraints(model, item_vars, store_vars, below_min_price_vars, ite
 def num_buying_items(item_vars):
     return cp_model.LinearExpr.Sum(flatten(item_vars))
 
-def add_delivery_fee_vars(model, item_vars, store_vars, below_min_price_vars, price_matrix):
+def add_shipping_fee_vars(model, item_vars, store_vars, below_min_price_vars, price_matrix):
     num_rows = len(item_vars)
     num_cols = len(item_vars[0])
     
@@ -152,10 +152,10 @@ def total_price(model, item_vars, store_vars, fee_vars, price_matrix):
         col_vars = [item_vars[r][c] for r in range(num_rows)]
         col_prices = [price_matrix[r][c] for r in range(num_rows)]
         total += cp_model.LinearExpr.ScalProd(col_vars, col_prices)
-        total += DELIVERY_FEE*fee_vars[c]
+        total += SHIPPING_FEE*fee_vars[c]
     return total
     
-def solve(book_list, store_list, only_no_delivery_fee=False):    
+def solve(book_list, store_list, only_free_shipping=False):    
     price_matrix = get_price_matrix(book_list, store_list)
     item_exist_matrix = get_item_exist_matrix(book_list, store_list)
     
@@ -165,7 +165,7 @@ def solve(book_list, store_list, only_no_delivery_fee=False):
     # Phase 1: Maximize number of buying books.
     model = cp_model.CpModel()
     item_vars, store_vars, below_min_price_vars = add_variables(model, num_rows, num_cols, price_matrix)
-    add_base_constraints(model, item_vars, store_vars, below_min_price_vars, item_exist_matrix, price_matrix, only_no_delivery_fee)
+    add_base_constraints(model, item_vars, store_vars, below_min_price_vars, item_exist_matrix, price_matrix, only_free_shipping)
     
     model.Maximize(num_buying_items(item_vars))
     solver = cp_model.CpSolver()
@@ -177,10 +177,10 @@ def solve(book_list, store_list, only_no_delivery_fee=False):
     # Phase 2: Minimize total cost.
     model = cp_model.CpModel()
     item_vars, store_vars, below_min_price_vars = add_variables(model, num_rows, num_cols, price_matrix)    
-    add_base_constraints(model, item_vars, store_vars, below_min_price_vars, item_exist_matrix, price_matrix, only_no_delivery_fee)
+    add_base_constraints(model, item_vars, store_vars, below_min_price_vars, item_exist_matrix, price_matrix, only_free_shipping)
     
     model.Add(max_num_buying_items == num_buying_items(item_vars))
-    fee_vars = add_delivery_fee_vars(model, item_vars, store_vars, below_min_price_vars, price_matrix)
+    fee_vars = add_shipping_fee_vars(model, item_vars, store_vars, below_min_price_vars, price_matrix)
     
     model.Minimize(total_price(model, item_vars, store_vars, fee_vars, price_matrix))
     solver = cp_model.CpSolver()
@@ -192,11 +192,11 @@ def solve(book_list, store_list, only_no_delivery_fee=False):
     # Phase 3: Generate all solutions
     model = cp_model.CpModel()
     item_vars, store_vars, below_min_price_vars = add_variables(model, num_rows, num_cols, price_matrix)    
-    add_base_constraints(model, item_vars, store_vars, below_min_price_vars, item_exist_matrix, price_matrix, only_no_delivery_fee)
+    add_base_constraints(model, item_vars, store_vars, below_min_price_vars, item_exist_matrix, price_matrix, only_free_shipping)
     
     model.Add(max_num_buying_items == num_buying_items(item_vars))
     
-    fee_vars = add_delivery_fee_vars(model, item_vars, below_min_price_vars, store_vars, price_matrix)
+    fee_vars = add_shipping_fee_vars(model, item_vars, below_min_price_vars, store_vars, price_matrix)
     model.Add(min_price == total_price(model, item_vars, store_vars, fee_vars, price_matrix))
     
     solver = cp_model.CpSolver()

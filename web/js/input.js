@@ -46,7 +46,13 @@ handleClick(e) {
                     else return `❌`})
             }
             )
-            ReactDOM.render(<SolutionContainer solutions={response.opt_result} />,document.getElementById("solution-container"))
+            const solutions = (
+                <React.Fragment>
+                    <SolutionContainer heading={"결과"} solutions={response.solutions} />
+                    <SolutionContainer heading={"결과(무료배송)"} solutions={response.solutions_free_shipping} />
+                </React.Fragment>
+            )
+            ReactDOM.render(solutions, document.getElementById("solution-container"))
         })
     }
 
@@ -88,9 +94,9 @@ handleClick(e) {
             <form action="/input" method="post">
                 <button type="button" id="opt" onClick={this.handleClick}>최적화</button>
                 <label htmlFor="min_quality">최저 품질
-                <select id="min_quality" value={this.state.minQualtiy} onChange={this.handleMinQualityChange}>
+                <select id="min_quality" defaultValue={"상"} value={this.state.minQualtiy} onChange={this.handleMinQualityChange}>
                     <option value="최상">최상</option>
-                    <option value="상" defaultValue>상</option>
+                    <option value="상">상</option>
                     <option value="중">중</option>
                     <option value="하">하</option>
                 </select>
