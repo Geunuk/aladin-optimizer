@@ -39,6 +39,7 @@ class Book():
         }
 
 def get_store_list():
+    print(f"Start crawling stores...")
     html = requests.get(used_book_main_url).text
     soup = BeautifulSoup(html, "lxml")
 
@@ -48,7 +49,7 @@ def get_store_list():
         if "offcode" in parse_qs(parsed_url.query):
             store_name = x.text.replace(" ", "")
             store_list.append(store_name)
-
+    print(f"Find {len(store_list)} stores...")
     return store_list
 
 def book_url_to_used_book_url(book_url):

@@ -3,6 +3,8 @@ from .book import get_store_list, get_book_list
 
 NUM_MAX_RESULT = 3
 
+store_list = None
+
 def result_to_json(solutions, book_list, store_list):
     opt_result = []
     for solution in solutions:
@@ -50,7 +52,10 @@ def result_to_json(solutions, book_list, store_list):
     return opt_result
     
 def processing(book_urls, min_quality):
-    store_list = get_store_list()
+    global store_list
+    
+    if store_list is None:
+        store_list = get_store_list()
     book_list = get_book_list(book_urls, store_list, min_quality)
     search_result = [None if book is None else book.to_dict() for book in book_list]
     solutions = solve(book_list, store_list)
