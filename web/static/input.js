@@ -24,6 +24,7 @@ var InputContainer = function (_React$Component) {
             disable_list: new Array(init_urls.length).fill(false),
             titles: new Array(init_urls.length).fill(""),
             statuses: new Array(init_urls.length).fill(""),
+            use_online: "online",
             min_quality: "상"
         };
         _this.handleClick = _this.handleClick.bind(_this);
@@ -32,6 +33,7 @@ var InputContainer = function (_React$Component) {
         _this.handleInputChange = _this.handleInputChange.bind(_this);
         _this.handleInputDisabled = _this.handleInputDisabled.bind(_this);
         _this.handleMinQualityChange = _this.handleMinQualityChange.bind(_this);
+        _this.handleUseOnlineChange = _this.handleUseOnlineChange.bind(_this);
         return _this;
     }
 
@@ -42,6 +44,7 @@ var InputContainer = function (_React$Component) {
 
             e.preventDefault();
             var orig_disable_list = [].concat(_toConsumableArray(this.state.disable_list));
+            var orig_use_online = this.state.use_online;
             var requestOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -61,11 +64,12 @@ var InputContainer = function (_React$Component) {
                         }
                     })
                 });
+
                 var solutions = React.createElement(
                     React.Fragment,
                     null,
-                    React.createElement(SolutionContainer, { heading: "결과", solutions: response.solutions }),
-                    React.createElement(SolutionContainer, { heading: "결과(무료배송)", solutions: response.solutions_free_shipping })
+                    React.createElement(SolutionContainer, { heading: "결과", solutions: response.solutions, use_online: orig_use_online }),
+                    orig_use_online === "online" ? React.createElement(SolutionContainer, { heading: "결과(무료배송)", solutions: response.solutions_free_shipping }) : ""
                 );
                 ReactDOM.render(solutions, document.getElementById("solution-container"));
             });
@@ -111,6 +115,13 @@ var InputContainer = function (_React$Component) {
             });
         }
     }, {
+        key: "handleUseOnlineChange",
+        value: function handleUseOnlineChange(e) {
+            this.setState({
+                use_online: e.target.value
+            });
+        }
+    }, {
         key: "handleMinQualityChange",
         value: function handleMinQualityChange(e) {
             this.setState({
@@ -127,6 +138,25 @@ var InputContainer = function (_React$Component) {
                     "button",
                     { type: "button", id: "opt", onClick: this.handleClick },
                     "\uCD5C\uC801\uD654"
+                ),
+                React.createElement(
+                    "label",
+                    { htmlFor: "online" },
+                    "\uAD6C\uC785 \uBC29\uBC95",
+                    React.createElement(
+                        "select",
+                        { id: "online", defaultValue: "online", value: this.state.use_online, onChange: this.handleUseOnlineChange },
+                        React.createElement(
+                            "option",
+                            { value: "online" },
+                            "\uC628\uB77C\uC778(\uC6B0\uC8FC\uC810)"
+                        ),
+                        React.createElement(
+                            "option",
+                            { value: "offline" },
+                            "\uC624\uD504\uB77C\uC778"
+                        )
+                    )
                 ),
                 React.createElement(
                     "label",

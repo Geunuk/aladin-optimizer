@@ -18,7 +18,7 @@ def handle_input():
     for i, disabled in enumerate(disable_list):
         if disabled:
             urls[i] = None
-    result = processing(urls, data["min_quality"])
+    result = processing(urls, data["min_quality"], data["use_online"]=="online")
     return result, 200
     
 if __name__ == '__main__':

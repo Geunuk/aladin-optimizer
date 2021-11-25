@@ -16,6 +16,7 @@ class InputContainer extends React.Component {
             disable_list: new Array(init_urls.length).fill(false),
             titles: new Array(init_urls.length).fill(""),
             statuses: new Array(init_urls.length).fill(""),
+            use_online: "online",
             min_quality: "상"
         }
         this.handleClick = this.handleClick.bind(this)
@@ -24,11 +25,13 @@ class InputContainer extends React.Component {
         this.handleInputChange = this.handleInputChange.bind(this)
         this.handleInputDisabled = this.handleInputDisabled.bind(this)
         this.handleMinQualityChange = this.handleMinQualityChange.bind(this)
+        this.handleUseOnlineChange = this.handleUseOnlineChange.bind(this)
     }
 
 handleClick(e) {
     e.preventDefault()
     const orig_disable_list = [...this.state.disable_list]
+    const orig_use_online = this.state.use_online
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,10 +53,12 @@ handleClick(e) {
                     }
                 })
             })
+             
             const solutions = (
                 <React.Fragment>
-                    <SolutionContainer heading={"결과"} solutions={response.solutions} />
-                    <SolutionContainer heading={"결과(무료배송)"} solutions={response.solutions_free_shipping} />
+                    <SolutionContainer heading={"결과"} solutions={response.solutions} use_online={orig_use_online}/>
+                    {orig_use_online ==="online" ?
+                        <SolutionContainer heading={"결과(무료배송)"} solutions={response.solutions_free_shipping} /> : ""}
                 </React.Fragment>
             )
             ReactDOM.render(solutions, document.getElementById("solution-container"))
@@ -97,6 +102,12 @@ handleClick(e) {
             disable_list: disable_list
         })
     }
+
+    handleUseOnlineChange(e) {
+        this.setState({
+            use_online: e.target.value
+        })
+    }
     handleMinQualityChange(e) {
         this.setState({
             min_quality: e.target.value
@@ -107,13 +118,19 @@ handleClick(e) {
         return (
             <form action="/input" method="post">
                 <button type="button" id="opt" onClick={this.handleClick}>최적화</button>
+                <label htmlFor="online">구입 방법
+                    <select id="online" defaultValue={"online"} value={this.state.use_online} onChange={this.handleUseOnlineChange}>
+                        <option value="online">온라인(우주점)</option>
+                        <option value="offline">오프라인</option>
+                    </select>
+                </label>
                 <label htmlFor="min_quality">최저 품질
-                <select id="min_quality" defaultValue={"상"} value={this.state.minQualtiy} onChange={this.handleMinQualityChange}>
-                    <option value="최상">최상</option>
-                    <option value="상">상</option>
-                    <option value="중">중</option>
-                    <option value="하">하</option>
-                </select>
+                    <select id="min_quality" defaultValue={"상"} value={this.state.minQualtiy} onChange={this.handleMinQualityChange}>
+                        <option value="최상">최상</option>
+                        <option value="상">상</option>
+                        <option value="중">중</option>
+                        <option value="하">하</option>
+                    </select>
                 </label>
                 <InputTable urls={this.state.urls} titles={this.state.titles} statuses={this.state.statuses}
                     numRows={this.state.urls.length} handleInputChange={this.handleInputChange}

@@ -1,6 +1,7 @@
 export function SolutionContainer(_ref) {
     var heading = _ref.heading,
-        solutions = _ref.solutions;
+        solutions = _ref.solutions,
+        use_online = _ref.use_online;
 
     return React.createElement(
         React.Fragment,
@@ -11,14 +12,16 @@ export function SolutionContainer(_ref) {
             heading
         ),
         solutions.map(function (sol, idx) {
-            return React.createElement(SolutionTable, { key: "Solution " + (idx + 1), name: "Solution " + (idx + 1), solution: sol });
+            return React.createElement(SolutionTable, { key: "Solution " + (idx + 1), name: "Solution " + (idx + 1),
+                solution: sol, use_online: use_online });
         })
     );
 }
 
 function SolutionTable(_ref2) {
     var name = _ref2.name,
-        solution = _ref2.solution;
+        solution = _ref2.solution,
+        use_online = _ref2.use_online;
 
     var numTotalItems = 0;
     var _iteratorNormalCompletion = true;
@@ -70,7 +73,7 @@ function SolutionTable(_ref2) {
                     return React.createElement(StoreRows, { key: store_idx.toString(), store_idx: store_idx,
                         total_price: solution.total_price, numTotalItems: numTotalItems,
                         store_name: store_name, item_list: item_list, store_price: store_price,
-                        discount: discount });
+                        discount: discount, use_online: use_online });
                 })
             )
         )
@@ -84,7 +87,8 @@ function StoreRows(_ref5) {
         store_name = _ref5.store_name,
         item_list = _ref5.item_list,
         store_price = _ref5.store_price,
-        discount = _ref5.discount;
+        discount = _ref5.discount,
+        use_online = _ref5.use_online;
 
     return React.createElement(
         React.Fragment,
@@ -97,7 +101,8 @@ function StoreRows(_ref5) {
 
             if (store_idx === 0 && item_idx === 0) return React.createElement(
                 ItemRow,
-                { key: item_idx.toString(), store_name: store_name, title: title, quality: quality, price: price, link: link },
+                { key: item_idx.toString(), store_name: store_name, title: title,
+                    quality: quality, price: price, link: link, use_online: use_online },
                 React.createElement(
                     "td",
                     { rowSpan: item_list.length.toString(), className: discount ? "discount" : "" },
@@ -110,13 +115,15 @@ function StoreRows(_ref5) {
                 )
             );else if (item_idx === 0) return React.createElement(
                 ItemRow,
-                { key: item_idx.toString(), store_name: store_name, title: title, quality: quality, price: price, link: link },
+                { key: item_idx.toString(), store_name: store_name, title: title,
+                    quality: quality, price: price, link: link, use_online: use_online },
                 React.createElement(
                     "td",
                     { rowSpan: item_list.length.toString(), className: discount ? "discount" : "" },
                     store_price
                 )
-            );else return React.createElement(ItemRow, { key: item_idx.toString(), store_name: store_name, title: title, quality: quality, price: price, link: link });
+            );else return React.createElement(ItemRow, { key: item_idx.toString(), store_name: store_name, title: title,
+                quality: quality, price: price, link: link, use_online: use_online });
         })
     );
 }
@@ -126,6 +133,7 @@ function ItemRow(_ref7) {
         quality = _ref7.quality,
         price = _ref7.price,
         link = _ref7.link,
+        use_online = _ref7.use_online,
         children = _ref7.children;
 
     return React.createElement(
@@ -155,7 +163,7 @@ function ItemRow(_ref7) {
                 price
             ),
             children,
-            React.createElement(
+            use_online === "online" ? React.createElement(
                 "td",
                 null,
                 React.createElement(
@@ -163,7 +171,7 @@ function ItemRow(_ref7) {
                     { href: link },
                     "\uB9C1\uD06C"
                 )
-            )
+            ) : ""
         )
     );
 }

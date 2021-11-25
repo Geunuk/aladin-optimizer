@@ -51,11 +51,12 @@ def get_price_matrix(book_list, store_list):
             price_matrix.append([0]*num_cols)
             continue
 
+        book_df = book_list[r].df
         row_prices = []
         for c in range(num_cols):
             store_name = store_list[c]
-            item = book_list[r].find_item(store_name)
-            price = item.price if item is not None else 0
+            row = book_df[book_df["store_name"] == store_name]
+            price = 0 if len(row)==0 else row.iloc[0]["price"]
             row_prices.append(price)
         price_matrix.append(row_prices)
     
@@ -66,14 +67,16 @@ def get_item_exist_matrix(book_list, store_list):
     num_cols = len(store_list)
     
     item_exist_matrix = [[False] * num_cols for  _ in range(num_rows)]
-    store_name_to_idx = {store_name:idx for idx, store_name in enumerate(store_list)}
     for r in range(num_rows):
         if book_list[r] is None:
             continue
-        for item in book_list[r].item_list:
-            store_idx = store_name_to_idx[item.store_name]
-            item_exist_matrix[r][store_idx] = True
-    
+
+        book_df = book_list[r].df
+        for c in range(num_cols):
+            store_name = store_list[c]
+            if store_name in book_df["store_name"].tolist():
+                item_exist_matrix[r][c] = True
+
     return item_exist_matrix
 
 def add_variables(model, num_rows, num_cols, price_matrix):
@@ -129,7 +132,7 @@ def add_base_constraints(model, item_vars, store_vars, below_min_price_vars, ite
 def num_buying_items(item_vars):
     return cp_model.LinearExpr.Sum(flatten(item_vars))
 
-def add_shipping_fee_vars(model, item_vars, store_vars, below_min_price_vars, price_matrix):
+def add_shipping_fee_vars(model, item_vars, store_vars, below_min_price_vars, price_matrix, online):
     num_rows = len(item_vars)
     num_cols = len(item_vars[0])
     
@@ -140,10 +143,14 @@ def add_shipping_fee_vars(model, item_vars, store_vars, below_min_price_vars, pr
         #tmp = model.NewBoolVar(f"{c}cp_model.LinearExpr.ScalProd(col_vars, col_prices) < MINIMUM_PRICE")
         model.AddBoolAnd([store_vars[c], below_min_price_vars[c]]).OnlyEnforceIf(var)
         model.AddBoolOr([store_vars[c].Not(), below_min_price_vars[c].Not()]).OnlyEnforceIf(var.Not())
-        
+    
+    #if not online:
+    #    for var in fee_vars:
+    #        model.AddBoolAnd([var.Not()])
+
     return fee_vars
 
-def total_price(model, item_vars, store_vars, fee_vars, price_matrix):
+def total_price(model, item_vars, store_vars, fee_vars, price_matrix, online):
     num_rows = len(item_vars)
     num_cols = len(item_vars[0])
     
@@ -152,10 +159,11 @@ def total_price(model, item_vars, store_vars, fee_vars, price_matrix):
         col_vars = [item_vars[r][c] for r in range(num_rows)]
         col_prices = [price_matrix[r][c] for r in range(num_rows)]
         total += cp_model.LinearExpr.ScalProd(col_vars, col_prices)
-        total += SHIPPING_FEE*fee_vars[c]
+        if online:
+            total += SHIPPING_FEE*fee_vars[c]
     return total
     
-def solve(book_list, store_list, only_free_shipping=False):    
+def solve(book_list, store_list, online, only_free_shipping=False):    
     price_matrix = get_price_matrix(book_list, store_list)
     item_exist_matrix = get_item_exist_matrix(book_list, store_list)
     
@@ -180,9 +188,9 @@ def solve(book_list, store_list, only_free_shipping=False):
     add_base_constraints(model, item_vars, store_vars, below_min_price_vars, item_exist_matrix, price_matrix, only_free_shipping)
     
     model.Add(max_num_buying_items == num_buying_items(item_vars))
-    fee_vars = add_shipping_fee_vars(model, item_vars, store_vars, below_min_price_vars, price_matrix)
+    fee_vars = add_shipping_fee_vars(model, item_vars, store_vars, below_min_price_vars, price_matrix, online)
     
-    model.Minimize(total_price(model, item_vars, store_vars, fee_vars, price_matrix))
+    model.Minimize(total_price(model, item_vars, store_vars, fee_vars, price_matrix, online))
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
     if status != 4:
@@ -196,8 +204,8 @@ def solve(book_list, store_list, only_free_shipping=False):
     
     model.Add(max_num_buying_items == num_buying_items(item_vars))
     
-    fee_vars = add_shipping_fee_vars(model, item_vars, below_min_price_vars, store_vars, price_matrix)
-    model.Add(min_price == total_price(model, item_vars, store_vars, fee_vars, price_matrix))
+    fee_vars = add_shipping_fee_vars(model, item_vars, below_min_price_vars, store_vars, price_matrix, online)
+    model.Add(min_price == total_price(model, item_vars, store_vars, fee_vars, price_matrix, online))
     
     solver = cp_model.CpSolver()
     callback = SaveOptimalSolution(flatten(item_vars))
