@@ -42,3 +42,7 @@ h1 {
 html {
     background-image: url("./library.jpg");
 }
+
+.discount {
+    color: red;
+}

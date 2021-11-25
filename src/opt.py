@@ -3,7 +3,7 @@ from itertools import chain
 from ortools.sat.python import cp_model
 
 MINIMUM_PRICE = 20000
-SHIPPING_FEE = 2000
+SHIPPING_FEE = 2500
 
 def flatten(list_of_list):
     return list(chain.from_iterable(list_of_list))

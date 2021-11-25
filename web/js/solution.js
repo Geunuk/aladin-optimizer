@@ -21,8 +21,11 @@ function SolutionTable({name, solution}) {
             <table className="solution">
                 <tbody>
                 {
-                    solution.stores.map(({store_name, item_list, store_price}, store_idx) => {
-                        return <StoreRows key={store_idx.toString()} store_idx={store_idx} total_price={solution.total_price} numTotalItems={numTotalItems} store_name={store_name} item_list={item_list} store_price={store_price} />          
+                    solution.stores.map(({store_name, item_list, store_price, discount}, store_idx) => {
+                        return <StoreRows key={store_idx.toString()} store_idx={store_idx}
+                                total_price={solution.total_price} numTotalItems={numTotalItems}
+                                store_name={store_name} item_list={item_list} store_price={store_price}
+                                discount={discount} />          
                     })
                 }
                 </tbody>
@@ -31,7 +34,7 @@ function SolutionTable({name, solution}) {
     )
 }
 
-function StoreRows({store_idx, total_price, numTotalItems, store_name, item_list, store_price}) {
+function StoreRows({store_idx, total_price, numTotalItems, store_name, item_list, store_price, discount}) {
     return (
         <React.Fragment>
             {
@@ -39,13 +42,14 @@ function StoreRows({store_idx, total_price, numTotalItems, store_name, item_list
                     if (store_idx === 0 && item_idx === 0)
                         return (
                             <ItemRow key={item_idx.toString()} store_name={store_name} title={title} quality={quality} price={price} link={link} >
-                                <td rowSpan={item_list.length.toString()}>{store_price}</td><td rowSpan={numTotalItems}>{total_price}</td>    
+                                <td rowSpan={item_list.length.toString()} className={discount ? "discount":""}>{store_price}</td>
+                                <td rowSpan={numTotalItems}>{total_price}</td>    
                             </ItemRow>
                         )    
                     else if (item_idx === 0)
                         return (
                             <ItemRow key={item_idx.toString()} store_name={store_name} title={title} quality={quality} price={price} link={link} >
-                                <td rowSpan={item_list.length.toString()}>{store_price}</td>    
+                                <td rowSpan={item_list.length.toString()} className={discount ? "discount":""}>{store_price}</td>    
                             </ItemRow>
                         )       
                     else
