@@ -9,6 +9,9 @@ label[for=opt] {
 #solution-container, #input-container, #introduction {
     background-color: white;
     border-radius: 10px;
+    margin: 0 auto;
+    max-width: calc(900px - (20px * 2));
+    
 }
 td.link, td.status {
     text-align: left;

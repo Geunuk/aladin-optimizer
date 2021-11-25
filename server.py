@@ -13,7 +13,12 @@ def index():
 @app.route('/input', methods=['POST'])
 def handle_input():
     data = request.get_json()
-    result = processing(data["urls"], data["min_quality"])
+    urls = data["urls"]
+    disable_list = data["disable_list"]
+    for i, disabled in enumerate(disable_list):
+        if disabled:
+            urls[i] = None
+    result = processing(urls, data["min_quality"])
     return result, 200
     
 if __name__ == '__main__':

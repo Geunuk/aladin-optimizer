@@ -1,5 +1,7 @@
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -16,16 +18,19 @@ var InputContainer = function (_React$Component) {
 
         var _this = _possibleConstructorReturn(this, (InputContainer.__proto__ || Object.getPrototypeOf(InputContainer)).call(this, props));
 
+        var init_urls = ["https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=16294019", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=86321510", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=14163562", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=188276096", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1000152", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=175263092", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=508047", "abc"];
         _this.state = {
-            urls: ["https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=16294019", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=86321510", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=14163562", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=188276096", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1000152", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=175263092", "https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=508047", "abc"],
-            titles: ["", "", "", "", "", "", ""],
-            statuses: ["", "", "", "", "", "", ""],
+            urls: init_urls,
+            disable_list: new Array(init_urls.length).fill(false),
+            titles: new Array(init_urls.length).fill(""),
+            statuses: new Array(init_urls.length).fill(""),
             min_quality: "상"
         };
         _this.handleClick = _this.handleClick.bind(_this);
         _this.handleIncreaseRow = _this.handleIncreaseRow.bind(_this);
-        _this.handleDecreaseRow = _this.handleDecreaseRow.bind(_this);
-        _this.onInputChange = _this.onInputChange.bind(_this);
+        _this.handleRemoveRow = _this.handleRemoveRow.bind(_this);
+        _this.handleInputChange = _this.handleInputChange.bind(_this);
+        _this.handleInputDisabled = _this.handleInputDisabled.bind(_this);
         _this.handleMinQualityChange = _this.handleMinQualityChange.bind(_this);
         return _this;
     }
@@ -36,22 +41,24 @@ var InputContainer = function (_React$Component) {
             var _this2 = this;
 
             e.preventDefault();
+            var orig_disable_list = [].concat(_toConsumableArray(this.state.disable_list));
             var requestOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(this.state)
             };
-
             fetch('http://127.0.0.1:5000/input', requestOptions).then(function (response) {
                 return response.json();
             }).then(function (response) {
                 console.log(JSON.stringify(response, null, 2));
                 _this2.setState({
-                    titles: response.search_result.map(function (data) {
-                        if (data !== null) return data.title;
+                    titles: response.search_result.map(function (data, idx) {
+                        if (!orig_disable_list[idx] && data !== null) return data.title;
                     }),
-                    statuses: response.search_result.map(function (data) {
-                        if (data !== null) return "\u2714\uFE0F " + data.store_list.length;else return "\u274C";
+                    statuses: response.search_result.map(function (data, idx) {
+                        if (!orig_disable_list[idx]) {
+                            if (data !== null) return "\u2714\uFE0F " + data.store_list.length;else return "\u274C";
+                        }
                     })
                 });
                 var solutions = React.createElement(
@@ -68,27 +75,40 @@ var InputContainer = function (_React$Component) {
         value: function handleIncreaseRow() {
             var urls = this.state.urls;
             urls.push("");
-
+            var disable_list = this.state.disable_list;
+            disable_list.push(false);
             this.setState({
-                urls: urls
+                urls: urls,
+                disable_list: disable_list
             });
         }
     }, {
-        key: "handleDecreaseRow",
-        value: function handleDecreaseRow() {
+        key: "handleRemoveRow",
+        value: function handleRemoveRow(idx) {
             var urls = this.state.urls;
-            urls.pop();
-
+            urls.splice(idx, 1);
+            var disable_list = this.state.disable_list;
+            disable_list.splice(idx, 1);
             this.setState({
-                urls: urls
+                urls: urls,
+                disable_list: disable_list
             });
         }
     }, {
-        key: "onInputChange",
-        value: function onInputChange(idx, updated_url) {
+        key: "handleInputChange",
+        value: function handleInputChange(idx, updated_url) {
             var urls = this.state.urls;
             urls[idx] = updated_url;
             this.setState({ urls: urls });
+        }
+    }, {
+        key: "handleInputDisabled",
+        value: function handleInputDisabled(idx) {
+            var disable_list = this.state.disable_list;
+            disable_list[idx] = !disable_list[idx];
+            this.setState({
+                disable_list: disable_list
+            });
         }
     }, {
         key: "handleMinQualityChange",
@@ -137,9 +157,15 @@ var InputContainer = function (_React$Component) {
                         )
                     )
                 ),
-                React.createElement(InputTable, { urls: this.state.urls, titles: this.state.titles, statuses: this.state.statuses, onInputChange: this.onInputChange }),
-                React.createElement(AdjustButton, { numRows: this.state.urls.length,
-                    handleIncreaseRow: this.handleIncreaseRow, handleDecreaseRow: this.handleDecreaseRow })
+                React.createElement(InputTable, { urls: this.state.urls, titles: this.state.titles, statuses: this.state.statuses,
+                    numRows: this.state.urls.length, handleInputChange: this.handleInputChange,
+                    disable_list: this.state.disable_list, handleInputDisabled: this.handleInputDisabled,
+                    handleRemoveRow: this.handleRemoveRow }),
+                React.createElement(
+                    "div",
+                    { id: "adjust_number" },
+                    React.createElement("input", { type: "button", id: "add", value: "+", onClick: this.handleIncreaseRow })
+                )
             );
         }
     }]);
@@ -187,7 +213,11 @@ var InputTable = function (_React$Component2) {
                         )
                     ),
                     this.props.urls.map(function (url, idx) {
-                        return React.createElement(InputTableRow, { key: idx.toString(), idx: idx.toString(), url: url, title: _this4.props.titles[idx], status: _this4.props.statuses[idx], onInputChange: _this4.props.onInputChange });
+                        return React.createElement(InputTableRow, { key: idx.toString(), idx: idx.toString(), url: url,
+                            title: _this4.props.titles[idx], status: _this4.props.statuses[idx],
+                            numRows: _this4.props.numRows, handleInputChange: _this4.props.handleInputChange,
+                            disabled: _this4.props.disable_list[idx], handleInputDisabled: _this4.props.handleInputDisabled,
+                            handleRemoveRow: _this4.props.handleRemoveRow });
                     })
                 )
             );
@@ -206,6 +236,8 @@ var InputTableRow = function (_React$Component3) {
         var _this5 = _possibleConstructorReturn(this, (InputTableRow.__proto__ || Object.getPrototypeOf(InputTableRow)).call(this, props));
 
         _this5.handleChange = _this5.handleChange.bind(_this5);
+        _this5.handleRemoveRow = _this5.handleRemoveRow.bind(_this5);
+        _this5.handleInputDisabled = _this5.handleInputDisabled.bind(_this5);
         return _this5;
     }
 
@@ -213,7 +245,19 @@ var InputTableRow = function (_React$Component3) {
         key: "handleChange",
         value: function handleChange(e) {
             var idx = parseInt(e.target.name.slice("url".length));
-            this.props.onInputChange(idx, e.target.value);
+            this.props.handleInputChange(idx, e.target.value);
+        }
+    }, {
+        key: "handleRemoveRow",
+        value: function handleRemoveRow(e) {
+            var idx = parseInt(this.props.idx);
+            this.props.handleRemoveRow(idx);
+        }
+    }, {
+        key: "handleInputDisabled",
+        value: function handleInputDisabled(e) {
+            var idx = parseInt(this.props.idx);
+            this.props.handleInputDisabled(idx);
         }
     }, {
         key: "render",
@@ -224,7 +268,8 @@ var InputTableRow = function (_React$Component3) {
                 React.createElement(
                     "td",
                     null,
-                    React.createElement("input", { type: "text", name: "url" + this.props.idx, value: this.props.url, onChange: this.handleChange })
+                    React.createElement("input", { type: "text", name: "url" + this.props.idx, value: this.props.url, disabled: this.props.disabled,
+                        onChange: this.handleChange })
                 ),
                 React.createElement(
                     "td",
@@ -235,36 +280,24 @@ var InputTableRow = function (_React$Component3) {
                     "td",
                     null,
                     this.props.title
+                ),
+                React.createElement(
+                    "td",
+                    null,
+                    React.createElement("input", { type: "button", id: "disable" + this.props.idx, value: this.props.disabled ? "Enable" : "Disable",
+                        onClick: this.handleInputDisabled })
+                ),
+                React.createElement(
+                    "td",
+                    null,
+                    React.createElement("input", { type: "button", id: "remove" + this.props.idx, value: "-", onClick: this.handleRemoveRow,
+                        disabled: this.props.numRows == 2 })
                 )
             );
         }
     }]);
 
     return InputTableRow;
-}(React.Component);
-
-var AdjustButton = function (_React$Component4) {
-    _inherits(AdjustButton, _React$Component4);
-
-    function AdjustButton() {
-        _classCallCheck(this, AdjustButton);
-
-        return _possibleConstructorReturn(this, (AdjustButton.__proto__ || Object.getPrototypeOf(AdjustButton)).apply(this, arguments));
-    }
-
-    _createClass(AdjustButton, [{
-        key: "render",
-        value: function render() {
-            return React.createElement(
-                "div",
-                { id: "adjust_number" },
-                React.createElement("input", { type: "button", id: "add", value: "+", onClick: this.props.handleIncreaseRow }),
-                React.createElement("input", { type: "button", id: "remove", value: "-", onClick: this.props.handleDecreaseRow, disabled: this.props.numRows == 2 })
-            );
-        }
-    }]);
-
-    return AdjustButton;
 }(React.Component);
 
 ReactDOM.render(React.createElement(InputContainer, null), document.getElementById('input-container'));
