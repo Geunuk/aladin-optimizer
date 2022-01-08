@@ -27,16 +27,14 @@ class Book():
         self.title = title
         self.df = df
 
-    
-
-def get_store_list():
+def get_total_store_list():
     print(f"Start crawling stores...")
     res = requests.get(used_book_main_url)
     assert res.status_code == 200
     html = res.text
     soup = BeautifulSoup(html, "lxml")
 
-    store_list = []
+    store_list = ["알라딘 직접 배송"]
     for a_tag in soup.select("table.gatetopwrap_table a"):
         store_name = a_tag.text.replace(" ", "")
         store_list.append(store_name)
@@ -44,7 +42,26 @@ def get_store_list():
     print(f"Find {len(store_list)} stores...")
     return store_list
 
-def book_url_to_used_book_url(book_url):
+def get_quality_list(search_result):
+    return [search_result[i].text.strip() for i in range(0, len(search_result), 4)]
+
+def get_price_list(search_result):
+    price_pat = re.compile('[0-9,]*원')
+    
+    func = lambda price_text: int(re.match(price_pat, price_text).group().replace(',', "").replace("원", ""))
+    result = [search_result[i+1].text.strip() for i in range(0, len(search_result), 4)]
+    return list(map(func, result))
+    
+def get_selling_store_list(search_result, aladin_direct):
+    result = [search_result[i+2].text.strip() for i in range(0, len(search_result), 4)]
+    if aladin_direct:
+        return result
+    else:
+        store_pat = re.compile('중고매장.*점$')
+        func = lambda store_name: re.search(store_pat, store_name).group()[4:].replace(" ", "").replace(".", "")
+        return list(map(func, result))
+
+def book_url_to_used_book_url(book_url, aladin_direct):
     parsed_url = urlparse(book_url)
     try:
         item_id = parse_qs(parsed_url.query)["ItemId"][0]
@@ -56,53 +73,54 @@ def book_url_to_used_book_url(book_url):
     used_book_url = used_book_url._replace(
                             query=urlencode(
                                 {"ItemId":item_id,
-                                 "TabType": 3 # Only aladin offline seller
+                                 "TabType": 2 if aladin_direct else 3
                                  }))
     used_book_url = urlunparse(used_book_url)
     return used_book_url
 
-def search_book_online(book_url):
-    # TODO: URL VALIDATION
-    used_book_url = book_url_to_used_book_url(book_url)
+def get_info(book_url, aladin_direct):
+    used_book_url = book_url_to_used_book_url(book_url, aladin_direct)
     if used_book_url is None:
         return None
 
     res = requests.get(used_book_url)
     if res.status_code != 200:
         return None
+    
     html = res.text
     soup = BeautifulSoup(html, "lxml")
-
-    price_pat = re.compile('[0-9,]*원')
-    store_pat = re.compile('중고매장.*점$')
+    search_result = soup.find_all('td', attrs={'class':"sell_tableCF3"})
     
-    price_list = []
-    quality_list = []
-    store_name_list = []
-    search_results = soup.find_all('td', attrs={'class':"sell_tableCF3"})
-    for i in range(0, len(search_results), 4):
-        quality = search_results[i].text.strip()
-        quality_list.append(quality)
-        
-        price_text = search_results[i+1].text.strip()
-        price = int(re.match(price_pat, price_text).group().replace(',', "").replace("원", ""))
-        price_list.append(price)
-
-        store_name = search_results[i+2].text.strip()
-        store_name = re.search(store_pat, store_name).group()[4:]
-        store_name = store_name.replace(" ", "")
-        store_name = store_name.replace(".", "")
-        store_name_list.append(store_name)
-    
-    link_list = [tag["href"] for tag in soup.select("td.sell_tableCF1 > a")]
     book_title = soup.find('a', attrs={"class":'Ere_bo_title'}).text
-    data = {"title": [book_title]*len(quality_list),
+    quality_list = get_quality_list(search_result)
+    price_list = get_price_list(search_result)
+    store_list = get_selling_store_list(search_result, aladin_direct)
+    link_list = [tag["href"] for tag in soup.select("td.sell_tableCF1 > a")]
+    assert len(quality_list) == len(price_list) == len(store_list) == len(link_list)
+
+    data = {"title": book_title,
             "quality": quality_list,
             "quality_num": [quality_numbers[q] for q in quality_list],
             "price": price_list,
-            "store_name": store_name_list,
+            "store_name": store_list,
             "link": link_list}
-    return Book(book_title, pd.DataFrame(data))
+    return data
+
+def search_book_online(book_url):
+    info = get_info(book_url, False)
+    info_direct = get_info(book_url, True)
+    if info is None or info_direct is None:
+        return None
+    assert info["title"] == info_direct["title"]
+    
+    book_title = info["title"]
+    total_data = {"title": [book_title]*(len(info["quality"])+len(info_direct["quality"])),
+                  "quality": info["quality"] + info_direct["quality"],
+                  "quality_num": info["quality_num"] + info_direct["quality_num"],
+                  "price": info["price"] + info_direct["price"],
+                  "store_name": info["store_name"] + info_direct["store_name"],
+                  "link": info["link"] + info_direct["link"]}
+    return Book(book_title, pd.DataFrame(total_data))
 
 def search_book_offline(book_url):
     parsed_url = urlparse(book_url)

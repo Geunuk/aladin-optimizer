@@ -1,5 +1,5 @@
 from .opt import solve, MINIMUM_PRICE, SHIPPING_FEE
-from .book import get_store_list, get_book_list
+from .book import get_total_store_list, get_book_list
 
 NUM_MAX_RESULT = 3
 
@@ -9,7 +9,7 @@ def processing(book_urls, min_quality, online=True):
     global store_list
     
     if store_list is None:
-        store_list = get_store_list()
+        store_list = get_total_store_list()
     book_list = get_book_list(book_urls, min_quality, online)
     search_result = search_result_to_json(book_list)
 

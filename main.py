@@ -1,6 +1,5 @@
 import argparse
 
-from src.book import get_store_list, get_book_list
 from src.pipeline import processing, print_result
 
 def main():
